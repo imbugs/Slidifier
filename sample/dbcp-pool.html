@@ -1,0 +1,187 @@
+<!doctype html>
+<html>
+	<head>
+		<title>jsPlumb 1.3.15 demo - jQuery</title>
+		<link rel="stylesheet" href="demo/css/jsPlumbDemo.css">
+		<link rel="stylesheet" href="dbcp-pool.css">
+		<script type='text/javascript' src='jquery.min.js'></script>
+		<script type='text/javascript' src='jquery-ui.min.js'></script>
+		<script type='text/javascript' src='js/jquery.jsPlumb-1.3.15-all.js'></script>
+		<script type='text/javascript' src='dbcp-pool.js'></script>
+		<script type='text/javascript'>
+		var isJBoss = window.location.search == "?jboss";
+		$(function(){
+			if (isJBoss) {
+				$('input#poolTypeJBOSS').attr('checked', 'checked');
+			} else {
+				$('input#poolTypeDBCP').attr('checked', 'checked');
+			}
+		});
+		function getConnection(elem) {
+			if (isJBoss) {
+				getConnectionJboss(elem);
+			} else {
+				getConnectionDBCP(elem);
+			}
+		}
+		function getConnectionJboss(elem) {
+			var len = g_elem.length;
+			if (len == 0) { alert('No active connections, Waiting!'); return;}
+			jsPlumb.detachAllConnections(g_elem[len-1].id);
+			var holder = $(elem).nextAll(".holder");
+			var size = $(holder).find('input').size();
+			var from = $(g_elem[len-1].obj).position();
+			var fix = $(g_elem[len-1].obj).css('margin-left').slice(0,-2);
+			var to = holder.position();
+
+			$(g_elem[len-1].obj).animate({left: to.left + size * 20 - fix, marginTop: to.top - from.top + size * 5}, 1000);
+			$(holder).append("<input type='hidden' class='counter' value='" + g_elem[len-1].id + "'/>");
+			$(g_elem[len-1].obj).prepend("<span class='close' onclick='javascript:releaseConnection(this)'>X</span>");
+			g_elem.splice(len-1,1);
+			$('div.tofill').animate({left: "-=150px"}, 1000, function() {
+    		resetHeadAndTail();
+  		});
+		}
+		function getConnectionDBCP(elem) {
+			if (g_elem.length == 0) { alert('No active connections, Waiting!'); return;}
+			jsPlumb.detachAllConnections(g_elem[0].id);
+			var holder = $(elem).nextAll(".holder");
+			var size = $(holder).find('input').size();
+			var from = $(g_elem[0].obj).position();
+			var fix = $(g_elem[0].obj).css('margin-left').slice(0,-2);
+			var to = holder.position();
+
+			$(g_elem[0].obj).animate({left: to.left + size * 20 - fix, marginTop: to.top - from.top + size * 5}, 1000);
+			$(holder).append("<input type='hidden' class='counter' value='" + g_elem[0].id + "'/>");
+			$(g_elem[0].obj).prepend("<span class='close' onclick='javascript:releaseConnection(this)'>X</span>");
+			g_elem.splice(0,1);
+			moveLink();
+		}
+		
+		function moveLink() {
+			for (el in g_elem) {
+				$(g_elem[el].obj).animate({marginLeft: "-=150px"}, 1000);
+			}
+			$('._jsPlumb_connector').animate({marginLeft: "-=150px"}, 1000, function() {
+    		refresh();
+  		});
+			$('div.tofill').animate({left: "-=150px"}, 1000, function() {
+    		resetHeadAndTail();
+  		});
+		}
+		
+		function refresh(){
+			jsPlumb.detachEveryConnection();
+			for (i in g_elem) {
+				if (i > 0){
+					var line = jsPlumb.connect({source:g_elem[i-1].id, target: g_elem[i].id }, stateMachineConnector);
+					g_elem[i-1].line = line;
+				}
+			}
+		}
+		function releaseConnection(elem) {
+			var elemid = $(elem).parent().attr('id')
+			$('input.counter[value="' + elemid + '"]').remove();
+			var node = g_elem_map[elemid];
+			$(elem).remove();
+			var from = $(node.obj).position();
+			var fix = $('div.tofill').css('margin-left').slice(0,-2);
+			var to = $('div.tofill').position();
+
+			$(node.obj).animate({left: to.left, marginLeft: '0px', marginTop: to.top - from.top}, 1000, function(){
+				var len = g_elem.length;
+				if (len > 0) {
+					var line = jsPlumb.connect({source:g_elem[len - 1].id, target: node.id }, stateMachineConnector);
+					g_elem[len - 1].line = line;
+				}
+				g_elem.push(node);
+			});
+			$('div.tofill').animate({left: "+=150px"}, 1000, function() {
+    		resetHeadAndTail();
+  		});
+
+		}
+		</script>
+		<style type='text/css'>
+		span.close {
+			float:left;
+			line-height: 5px;
+		}
+		div.container {
+			padding: 10px 15px 15px 15px;
+			border: 3px solid;
+			width: 50em;
+			height: 8em;
+			text-align: center;
+		}
+		.title {
+			font-weight: bold;
+			height: 2em;
+			line-height: 2em; 
+		}
+		input.btn {
+			font-weight: bold;
+			width: 150px;
+		}
+		div.column {
+			float: left;
+			margin: 10px 10px 10px 10px;
+			padding: 10px 10px 10px 10px;
+			border: 1px solid;
+			height: 150px;
+			width: 180px;
+		}
+		div.holder {
+			margin: 10px, 0, 0, 10px;
+		}
+		div#tail {
+			margin-left: -150px;
+			margin-top: 150px;
+		}
+		div#head {
+			margin-left: 5px;
+			margin-top: 150px;
+		}
+		div.pointer {
+			height: 20px;
+			line-height: 20px;
+		}
+		</style>
+	</head>
+	<body>
+	<input type="radio" id="poolTypeDBCP" name="poolType" value="DBCP" onclick="javascript:window.location='?dbcp'">DBCP</input>
+	<input type="radio" id="poolTypeJBOSS" name="poolType" value="JBOSS" onclick="javascript:window.location='?jboss'">JBOSS</input>
+	<div style="position:relative;margin-top:50px;">
+		<div id="threads" class="container" style="height: 220px;">
+			<span class="title label">THREADS</span>
+			<div class="columns">
+				<div class="column">
+					<input type="button" class="btn" value="ds.getConnection( )" onclick="javascript:getConnection(this)"/>
+					<div class="holder"></div>
+				</div>
+				<div class="column">
+					<input type="button" class="btn" value="ds.getConnection( )" onclick="javascript:getConnection(this)"/>
+					<div class="holder"></div>
+				</div>
+				<div class="column">
+					<input type="button" class="btn" value="ds.getConnection( )" onclick="javascript:getConnection(this)"/>
+					<div class="holder"></div>
+				</div>
+			</div>
+		</div>
+		<br/>
+		<div id="pool" class="container">
+			<span class="title label">DBCP POOL</span>
+			<div id="linked">
+				<div class="window ui-draggable pointer" id="head">Head</div>
+				<div class="window ui-draggable node" id="window1"><strong>conn1</strong><br><br></div>
+				<div class="window ui-draggable node" id="window2"><strong>conn2</strong><br><br></div>
+				<div class="window ui-draggable node" id="window3"><strong>conn3</strong><br><br></div>
+				<div class="window ui-draggable node" id="window4"><strong>conn4</strong><br><br></div>
+				<div class="window ui-draggable node" id="window5"><strong>conn5</strong><br><br></div>
+				<div class="window ui-draggable node tofill pointer" id='tail'>Tail</div>
+			</div>
+	  </div>
+	</div>
+	</body>
+</html>
