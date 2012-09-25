@@ -13,8 +13,10 @@
 		$(function(){
 			if (isJBoss) {
 				$('input#poolTypeJBOSS').attr('checked', 'checked');
+				$('span#poolType').text("JBOSS POOL");
 			} else {
 				$('input#poolTypeDBCP').attr('checked', 'checked');
+				$('span#poolType').text("DBCP POOL");
 			}
 		});
 		function getConnection(elem) {
@@ -171,7 +173,7 @@
 		</div>
 		<br/>
 		<div id="pool" class="container">
-			<span class="title label">DBCP POOL</span>
+			<span class="title label" id="poolType">DBCP POOL</span>
 			<div id="linked">
 				<div class="window ui-draggable pointer" id="head">Head</div>
 				<div class="window ui-draggable node" id="window1"><strong>conn1</strong><br><br></div>

@@ -22,6 +22,9 @@ var ui = (function() {
 			prettyPrint();
 			$('#slidecontent').fadeIn(300, function() {
 				refreshed = true;
+				if (typeof(ui.onRefresh)=="function") {
+					ui.onRefresh(ui.slideCounter);
+				}
 			});
 		});
 	}
