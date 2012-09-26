@@ -28,6 +28,8 @@
 	<script type="text/javascript" src="js/slideparser.js"></script>
 	<script type="text/javascript" src="js/slidifier.js"></script>
 	<script type="text/javascript" src="js/slideeditor.js"></script>
+	<script type="text/javascript" src="http://dev.lab.alipay.net:8899/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="http://dev.lab.alipay.net:8899/js/sub.js"></script>
 	
 	<link rel="icon" type="image/gif" href="favicon.gif">
 	<link rel="shortcut icon" href="favicon.gif">
@@ -55,6 +57,7 @@ span.first .author{
 	<script type="text/javascript" src="js/commons.js"></script>
 	<script type="text/javascript" src="js/wadda.js"></script>
 	<script type="text/javascript">
+	var zoomr = null;
 	$(function(){
 		$("#srcForm").submit();
 		var page = window.location.search;
@@ -69,10 +72,30 @@ span.first .author{
 				var img = $(elem).get(0);
 				if (img == null) return;
 				if ($(elem).attr('src').indexOf('db-img') < 0) return;
+				zoomr = null;
 				img.title = $(elem).attr('src');
 				zoomr = new Wadda(img, {lensRadius: 500, fadeLens: false, zoom: 2});
 			});
 		}
+		$(document).subevent({url:'http://dev.lab.alipay.net:8899', keyboard: false, mouse:false});
+		$(document).broadcast(function(e, data){
+			switch(data.type) {
+				case 'page': 
+					if (data.count != ui.slideCounter) {
+		                        	ui.slideCounter = data.count;
+			                        ui.refresh();
+					}
+					break;
+				case 'start': 
+					if(zoomr != null) zoomr.mouseDown();
+					break;
+				case 'stop': 
+					if(zoomr != null) zoomr.mouseUp();
+					break;
+				default:
+					if(zoomr != null) zoomr.syncZoom(data);
+			}
+		});
 	});
 	</script>
 <body>

@@ -106,51 +106,6 @@ Wadda.prototype = {
 		me.doZoom = false;
 	},
 	
-        syncZoom: function(posOff){
-                var me = this;
-                if(!me.imgCanv)
-                        return;
-		me.canv.style.display = '';
-                var posX = posOff.x + me.image.offsetLeft;
-                var posY = posOff.y + me.image.offsetTop;
-                var centerX = me.canv.width/2;
-                var centerY = me.canv.height/2;
-                var clW = me.canv.width/2;
-                var clH = me.canv.height/2;
-                var ctx = me.canv.getContext('2d');
-                var hctx = me.hcanv.getContext('2d');
-
-                me.canv.style.left =  posX - clW + me.conf.xOff;
-                me.canv.style.top =  posY - clH + me.conf.yOff;
-
-                ctx.globalCompositeOperation = 'source-over';
-                var lf = posX - me.image.offsetLeft;
-                var tp = posY - me.image.offsetTop;
-
-                //Make xored shape due to chrome
-                hctx.globalCompositeOperation = 'source-over';
-
-                hctx.fillRect(-1, -1, me.canv.width+1, me.canv.height+1);
-                hctx.globalCompositeOperation = 'xor';
-                hctx.beginPath();
-                hctx.arc(centerX, centerY, clW, 0, Math.PI*2, true);
-                hctx.closePath();
-                hctx.fill();
-
-                lf = lf*me.conf.zoom - clW;
-                tp = tp*me.conf.zoom - clH;
-
-                if(lf<0) lf = 0;
-                else if(lf>me.imgCanv.width - me.canv.width) lf = me.imgCanv.width - me.canv.width;
-                if(tp<0) tp = 0;
-                else if(tp>me.imgCanv.height - me.canv.height) tp = me.imgCanv.height - me.canv.height;
-
-
-                ctx.drawImage(me.imgCanv, lf, tp, me.canv.width, me.canv.height, 0, 0, me.canv.width, me.canv.height);
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.drawImage(me.hcanv, 0, 0, me.canv.width, me.canv.height);
-	},
-
 	mouseMove: function(e){
 		var me = this;
 		if(!me.doZoom || !me.imgCanv)
@@ -222,7 +177,7 @@ Wadda.Helpers = {
 	},
 	
 	createScaledImageCanvas: function(img, zoom, orgImg){
-		orgImg = img;
+		orgImg = orgImg || img;
 		var tmp = document.createElement('canvas');
 		var orgSz = Wadda.Helpers.getImageSize(orgImg);
 		tmp.width = img.width*zoom;
@@ -233,8 +188,11 @@ Wadda.Helpers = {
 	},
 	
 	getImageSize: function (img){
-		var im = img;
+		var im = document.createElement('img');
+		im.src = img.src;
+		document.body.appendChild(im);
 		var ret = {w: im.clientWidth, h: im.clientHeight};
+		document.body.removeChild(im);
 		return ret;
 	}
 };

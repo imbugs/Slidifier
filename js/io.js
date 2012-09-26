@@ -1,4 +1,4 @@
-var io = (function() {
+var slideIO = (function() {
 	var slideshowId;
 	var slideshowKey;
 	
